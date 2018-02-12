@@ -11,7 +11,8 @@
 
 #include "felica_uart.h"
 
-static struct file *uart_f = NULL;
+//static struct file *uart_f = NULL;
+static int fd = -1;
 
 /*
  * Description : open uart
@@ -32,7 +33,8 @@ int felica_uart_open(void)
       return -1;
     }
 
-    if (uart_f != NULL)
+    //if (uart_f != NULL)
+    if (fd > 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] felica_uart is already opened\n");
 
@@ -41,11 +43,12 @@ int felica_uart_open(void)
 
     set_fs(KERNEL_DS);
 
-    uart_f = filp_open(FELICA_UART_NAME, O_RDWR | O_NOCTTY | O_NONBLOCK, 0);
-
+    //uart_f = filp_open(FELICA_UART_NAME, O_RDWR | O_NOCTTY | O_NONBLOCK, 0);
+    fd = sys_open(FELICA_UART_NAME, O_RDWR | O_NOCTTY | O_NONBLOCK, 0);
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] open UART\n");
 
-    if (uart_f == NULL)
+    //if (uart_f == NULL)
+    if(fd < 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] ERROR - can not sys_open \n");
 
@@ -59,8 +62,11 @@ int felica_uart_open(void)
     newtio.c_cflag = B460800 | CS8 | CLOCAL | CREAD;
     newtio.c_cc[VMIN] = 1;
     newtio.c_cc[VTIME] = 5;
-    do_vfs_ioctl(uart_f, -1, TCFLSH, TCIOFLUSH);
-    do_vfs_ioctl(uart_f, -1, TCSETSF, (unsigned long)&newtio);
+
+    sys_ioctl(fd, TCFLSH, TCIOFLUSH);
+    sys_ioctl(fd, TCSETSF, (unsigned long)&newtio);
+    //do_vfs_ioctl(uart_f, -1, TCFLSH, TCIOFLUSH);
+    //do_vfs_ioctl(uart_f, -1, TCSETSF, (unsigned long)&newtio);
 
     set_fs(old_fs);
 
@@ -80,7 +86,8 @@ int felica_uart_close(void)
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] close_hs_uart - start \n");
 
-    if (uart_f == NULL)
+    //if (uart_f == NULL)
+    if (fd < 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] felica_uart is not opened \n");
 
@@ -90,8 +97,10 @@ int felica_uart_close(void)
     set_felica_uart_status(UART_STATUS_READY);
 
     set_fs(KERNEL_DS);
-    filp_close(uart_f, NULL);
-    uart_f = NULL;
+    //filp_close(uart_f, NULL);
+    sys_close(fd);
+    //uart_f = NULL;
+    fd = -1;
     set_fs(old_fs);
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] close_hs_uart - end \n");
@@ -107,11 +116,12 @@ int felica_uart_close(void)
 int felica_uart_write(char *buf, size_t count)
 {
     mm_segment_t old_fs = get_fs();
-    int n;
+    ssize_t n;
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] write_hs_uart - start \n");
 
-    if (uart_f == NULL)
+    //if (uart_f == NULL)
+    if (fd < 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] felica_uart is not opened\n");
 
@@ -119,15 +129,16 @@ int felica_uart_write(char *buf, size_t count)
     }
 
     set_fs(KERNEL_DS);
-    n = vfs_write(uart_f, buf, count, &uart_f->f_pos);
-    FELICA_DEBUG_MSG_LOW("[FELICA_UART] write_hs_uart - write (%d)\n", n);
+    //n = vfs_write(uart_f, buf, count, &uart_f->f_pos);
+    n = sys_write(fd, buf, count);
+    FELICA_DEBUG_MSG_LOW("[FELICA_UART] write_hs_uart(fd) - write (%d)\n", (int)n);
 
     set_fs(old_fs);
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] write_hs_uart - end \n");
 
 
-    return n;
+    return (int)n;
 }
 
 /*
@@ -138,12 +149,13 @@ int felica_uart_write(char *buf, size_t count)
 int felica_uart_read(char *buf, size_t count)
 {
     mm_segment_t old_fs = get_fs();
-    int n;
+    ssize_t n;
     int retry = 5;
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] read_hs_uart - start \n");
 
-    if (uart_f == NULL)
+    //if (uart_f == NULL)
+    if (fd < 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] felica_uart is not opened\n");
 
@@ -152,7 +164,8 @@ int felica_uart_read(char *buf, size_t count)
 
     set_fs(KERNEL_DS);
 
-    while ((n = vfs_read(uart_f, buf, count, &uart_f->f_pos)) == -EAGAIN && retry > 0)
+    //while ((n = vfs_read(uart_f, buf, count, &uart_f->f_pos)) == -EAGAIN && retry > 0)
+    while ((n = sys_read(fd, buf, count)) == -EAGAIN && retry > 0)
     {
         mdelay(10);
         FELICA_DEBUG_MSG_MED("[FELICA_UART] felica_uart_read - delay : %d \n", retry);
@@ -161,13 +174,13 @@ int felica_uart_read(char *buf, size_t count)
     }
 
 
-    FELICA_DEBUG_MSG_MED("[FELICA_UART] read_hs_uart - count(%d), num of read data(%d) \n",(int)count ,n);
+    FELICA_DEBUG_MSG_MED("[FELICA_UART] read_hs_uart(fd) - count(%d), num of read data(%d) \n",(int)count ,(int)n);
 
     set_fs(old_fs);
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] read_hs_uart - end \n");
 
-    return n;
+    return (int)n;
 }
 /*
  * Description : get size of remaing data
@@ -181,7 +194,8 @@ int felica_uart_ioctrl(int *count)
 
     FELICA_DEBUG_MSG_LOW("[FELICA_UART] felica_uart_ioctrl - start \n");
 
-    if (uart_f == NULL)
+    //if (uart_f == NULL)
+    if (fd < 0)
     {
         FELICA_DEBUG_MSG_HIGH("[FELICA_UART] felica_uart is not opened\n");
 
@@ -189,8 +203,9 @@ int felica_uart_ioctrl(int *count)
     }
 
     set_fs(KERNEL_DS);
-    n = do_vfs_ioctl(uart_f, -1, TIOCINQ, (unsigned long)count);
-    FELICA_DEBUG_MSG_MED("[FELICA_UART] do_vfs_ioctl return(%d), count(%d) \n", n, *count);
+    //n = do_vfs_ioctl(uart_f, -1, TIOCINQ, (unsigned long)count);
+    n = sys_ioctl(fd, TIOCINQ, (unsigned long)count);
+    FELICA_DEBUG_MSG_MED("[FELICA_UART] sys_ioctl return(%d), count(%d) \n", n, *count);
 
     set_fs(old_fs);
 

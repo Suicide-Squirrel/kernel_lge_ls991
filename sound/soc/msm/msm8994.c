@@ -726,7 +726,7 @@ static void msm8994_tert_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 	struct msm8994_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
 	int ret = 0;
-	pr_info("%s: dai name %s %p  substream = %s  stream = %d  \n",
+	pr_info("%s: dai name %s %pK  substream = %s  stream = %d  \n",
 		__func__, cpu_dai->name, cpu_dai->dev,substream->name, substream->stream);
 
 	if (atomic_dec_return(&tert_mi2s_rsc_ref) == 0) {
@@ -756,7 +756,7 @@ static int msm8994_tert_mi2s_snd_startup(struct snd_pcm_substream *substream)
 	struct msm8994_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
 
-    pr_err("%s: dai name %s %p  substream = %s  stream = %d bit width =%d sample rate =%d  \n",
+    pr_info("%s: dai name %s %pK  substream = %s  stream = %d bit width =%d sample rate =%d  \n",
         __func__, cpu_dai->name, cpu_dai->dev,substream->name,
         substream->stream, tert_mi2s_bit_format, tert_mi2s_sample_rate);
 
@@ -861,7 +861,7 @@ static void msm8994_quat_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
 	int ret = 0;
 
-	pr_info("%s: dai name %s %p  substream = %s  stream = %d  \n",
+	pr_info("%s: dai name %s %pK substream = %s  stream = %d  \n",
 		__func__, cpu_dai->name, cpu_dai->dev,substream->name, substream->stream);
 
 	if (atomic_dec_return(&quat_mi2s_rsc_ref) == 0) {
@@ -891,7 +891,7 @@ static int msm8994_quat_mi2s_snd_startup(struct snd_pcm_substream *substream)
 	struct msm8994_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	struct msm_pinctrl_info *pinctrl_info = &pdata->pinctrl_info;
 
-    pr_info("%s: dai name %s %p  substream = %s  stream = %d bit width =%d sample rate =%d  \n",
+    pr_info("%s: dai name %s %pK substream = %s  stream = %d bit width =%d sample rate =%d  \n",
         __func__, cpu_dai->name, cpu_dai->dev,substream->name,
         substream->stream, quat_mi2s_bit_format, quat_mi2s_sample_rate);
 

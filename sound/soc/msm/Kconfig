@@ -258,7 +258,6 @@ config SND_SOC_MSM8X16
 	select MFD_CORE
 	select SND_DYNAMIC_MINORS
 	select QTI_PP
-	select DTS_SRS_TM
 	select DOLBY_DAP
 	select DOLBY_DS2
 	select MSM_QDSP6_APRV3
@@ -283,7 +282,6 @@ config SND_SOC_MSM8909
 	select MFD_CORE
 	select SND_DYNAMIC_MINORS
 	select QTI_PP
-	select DTS_SRS_TM
 	select DOLBY_DAP
 	select MSM_QDSP6_APRV3
 	select MSM_QDSP6V2_CODECS
@@ -320,7 +318,6 @@ config SND_SOC_MSM8994
 	select SND_SOC_MSM_HDMI_CODEC_RX
 	select QTI_PP
 	select SND_SOC_CPE
-	select MSM_ULTRASOUND
 	select SND_HWDEP
 	help
 	 To add support for SoC audio on MSM8994.

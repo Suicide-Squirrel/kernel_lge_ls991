@@ -47,7 +47,7 @@ int felica_i2c_open (void)
   if (fd < 0)
   {
     FELICA_DEBUG_MSG_HIGH("[FELICA_I2C] ERROR - felica_i2c_open : %d \n", fd);
-
+    set_fs(old_fs);
     return fd;
   }
 
